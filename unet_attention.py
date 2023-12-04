@@ -40,6 +40,35 @@ class DoubleConv(nn.Module):
         return self.double_conv(x)
 
 
+class AttentionGate(nn.Module):
+    def __init__(self, F_g, F_l, F_int):
+        super(AttentionGate, self).__init__()
+        self.W_g = nn.Sequential(
+            nn.Conv2d(F_g, F_int, kernel_size=1, stride=1, padding=0, bias=True),
+            nn.BatchNorm2d(F_int)
+            )
+        
+        self.W_x = nn.Sequential(
+            nn.Conv2d(F_l, F_int, kernel_size=1, stride=1, padding=0, bias=True),
+            nn.BatchNorm2d(F_int)
+        )
+
+        self.psi = nn.Sequential(
+            nn.Conv2d(F_int, 1, kernel_size=1, stride=1, padding=0, bias=True),
+            nn.BatchNorm2d(1),
+            nn.Sigmoid()
+        )
+        
+        self.relu = nn.ReLU(inplace=True)
+
+    def forward(self, g, x):
+        g1 = self.W_g(g)
+        x1 = self.W_x(x)
+        psi = self.relu(g1 + x1)
+        psi = self.psi(psi)
+        return x * psi
+
+
 class UNet(nn.Module):
     """Unet inspired architecture.
     Using same convolutions, with output channels being equal to the number of classes. Adding instead of
@@ -63,6 +92,11 @@ class UNet(nn.Module):
         for intermediate_channel in channel_list:
             self.downs.append(DoubleConv(curr_channel, intermediate_channel, intermediate_channel))
             curr_channel = intermediate_channel
+            
+        self.attention_gates = nn.ModuleList()
+        for i in range(len(channel_list)-1):
+            # self.attention_gates.append(AttentionGate(channel_list[i], channel_list[i+1], channel_list[i+1] // 2)) # For concatenation
+            self.attention_gates.append(AttentionGate(channel_list[i], channel_list[i+1], channel_list[i])) # For adding
 
         self.bottleneck = DoubleConv(curr_channel, curr_channel * 2, curr_channel)
 
@@ -88,7 +122,8 @@ class UNet(nn.Module):
 
         x = self.bottleneck(x)
         for index, up in enumerate(self.ups):
+            attn = self.attention_gates[-index - 1](x, down_activations[-index - 1])
             x = self.unpool.forward(x, pool_outs[-index - 1])
-            temp = x + down_activations[-index - 1]
+            temp = x + attn
             x = up(temp)
         return x
