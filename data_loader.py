@@ -70,7 +70,12 @@ class pascalVOCLoader(data.Dataset):
                 file_list = tuple(open(path, "r"))
                 file_list = [id_.rstrip() for id_ in file_list]
                 self.files[split] = file_list
-            self.setup_annotations()
+
+            if sbd_path is None or "aug" not in split:
+                print("Using small dataset (Pascal VOC)")
+            else:
+                self.setup_annotations()
+                print("Using large dataset (Pascal VOC + SBD)")
 
         self.tf = transforms.Compose(
             [
