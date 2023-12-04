@@ -1,0 +1,11 @@
+# These are some instructions for installation assuming that you are not using a gpu.
+# Copy these and run in command line
+
+conda create --name dl_proj_cpu
+conda activate dl_proj_cpu
+conda install scipy=1.2
+# install pytorch (command varies depending on machine, look it up on pytorch website), linux with cuda is below
+conda install pytorch torchvision torchaudio pytorch-cuda=12.1 -c pytorch -c nvidia
+pip install matplotlib
+pip install jupyter notebook
+pip install tqdm
