@@ -1,0 +1,9 @@
+# once you switch to gpu you can't delete parts of the data without breaking code. If this does happen switch back to cpu conda env and fix
+conda create --name dl_proj_gpu
+conda activate dl_proj_gpu
+# install pytorch (command varies depending on machine, look it up on pytorch website), linux with cuda is below
+conda install pytorch torchvision torchaudio pytorch-cuda=12.1 -c pytorch -c nvidia
+pip install matplotlib
+pip install jupyter notebook
+pip install scipy
+pip install tqdm
