@@ -64,6 +64,11 @@ class pascalVOCLoader(data.Dataset):
         self.files = collections.defaultdict(list)
         self.img_size = img_size if isinstance(img_size, tuple) else (img_size, img_size)
 
+        if sbd_path is None or "aug" not in split:
+            self.dataset_large = False
+        else:
+            self.dataset_large = True
+
         if not self.test_mode:
             for split in ["train", "val", "trainval"]:
                 path = pjoin(self.root, "ImageSets/Segmentation", split + ".txt")
@@ -71,7 +76,7 @@ class pascalVOCLoader(data.Dataset):
                 file_list = [id_.rstrip() for id_ in file_list]
                 self.files[split] = file_list
 
-            if sbd_path is None or "aug" not in split:
+            if self.dataset_large is False:
                 print("Using small dataset (Pascal VOC)")
             else:
                 self.setup_annotations()
@@ -90,7 +95,10 @@ class pascalVOCLoader(data.Dataset):
     def __getitem__(self, index):
         im_name = self.files[self.split][index]
         im_path = pjoin(self.root, "JPEGImages", im_name + ".jpg")
-        lbl_path = pjoin(self.root, "SegmentationClass/pre_encoded", im_name + ".png")
+        if self.dataset_large is False:
+            lbl_path = pjoin(self.root, "SegmentationClass", im_name + ".png")
+        else:
+            lbl_path = pjoin(self.root, "SegmentationClass/pre_encoded", im_name + ".png")
         im = Image.open(im_path)
         lbl = Image.open(lbl_path)
         if self.augmentations is not None:
