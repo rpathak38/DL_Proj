@@ -1,7 +1,6 @@
 import torch
 from torch import nn
 
-
 class Normalize(nn.Module):
     def __init__(self, mean, std):
         super().__init__()
@@ -12,74 +11,51 @@ class Normalize(nn.Module):
     def forward(self, x):
         return (x - self.mean) / self.std
 
+class InceptionBlock(nn.Module):
+    def __init__(self, in_channels, out_channels):
+        super(InceptionBlock, self).__init__()
+        mid_channels = out_channels // 3
+
+        self.conv1 = nn.Conv2d(in_channels, mid_channels, kernel_size=1, stride=1, padding=0)
+        self.conv3 = nn.Conv2d(in_channels, mid_channels, kernel_size=3, stride=1, padding=1)
+        self.conv5 = nn.Conv2d(in_channels, out_channels - 2 * mid_channels, kernel_size=5, stride=1, padding=2)
+
+    def forward(self, x):
+        conv1_out = self.conv1(x)
+        conv3_out = self.conv3(x)
+        conv5_out = self.conv5(x)
+        return torch.cat([conv1_out, conv3_out, conv5_out], dim=1)
 
 class DoubleConv(nn.Module):
     def __init__(self, in_channels, mid_channels, out_channels, last=False):
         super().__init__()
         if last is False:
             self.double_conv = nn.Sequential(
-                nn.Conv2d(in_channels, mid_channels, (3, 3), (1, 1), 1, bias=False),
-                nn.BatchNorm2d(mid_channels),
+                InceptionBlock(in_channels, out_channels),
+                nn.BatchNorm2d(out_channels),
                 nn.ReLU(inplace=True),
-                nn.Conv2d(mid_channels, out_channels, (3, 3), (1, 1), 1, bias=False),
+                InceptionBlock(out_channels, out_channels),
                 nn.BatchNorm2d(out_channels),
                 nn.ReLU(inplace=True)
             )
         else:
             self.double_conv = nn.Sequential(
-                nn.Conv2d(in_channels, mid_channels, (3, 3), (1, 1), 1, bias=False),
+                InceptionBlock(in_channels, mid_channels),
                 nn.BatchNorm2d(mid_channels),
                 nn.ReLU(inplace=True),
-                nn.Conv2d(mid_channels, out_channels, (3, 3), (1, 1), 1, bias=False),
+                InceptionBlock(mid_channels, out_channels),
                 nn.BatchNorm2d(out_channels),
                 nn.Sigmoid()
             )
+        
+        print(f"Expected: {in_channels} -> {out_channels}")
 
     def forward(self, x):
-        # x should (N, C, H, W)
         return self.double_conv(x)
 
 
-class AttentionGate(nn.Module):
-    def __init__(self, F_g, F_l, F_int):
-        super(AttentionGate, self).__init__()
-        self.W_g = nn.Sequential(
-            nn.Conv2d(F_g, F_int, kernel_size=1, stride=1, padding=0, bias=True),
-            nn.BatchNorm2d(F_int)
-            )
-        
-        self.W_x = nn.Sequential(
-            nn.Conv2d(F_l, F_int, kernel_size=1, stride=1, padding=0, bias=True),
-            nn.BatchNorm2d(F_int)
-        )
 
-        self.psi = nn.Sequential(
-            nn.Conv2d(F_int, 1, kernel_size=1, stride=1, padding=0, bias=True),
-            nn.BatchNorm2d(1),
-            nn.Sigmoid()
-        )
-        
-        self.relu = nn.ReLU(inplace=True)
-
-    def forward(self, g, x):
-        g1 = self.W_g(g)
-        x1 = self.W_x(x)
-        psi = self.relu(g1 + x1)
-        psi = self.psi(psi)
-        return x * psi
-
-
-class UNetAttn(nn.Module):
-    """Unet inspired architecture.
-    Using same convolutions, with output channels being equal to the number of classes. Adding instead of
-    appending. Upsampling with MaxUnpooling instead of transpose convolutions.
-
-    Attributes:
-        in_channels: The number of input channels.
-        out_channels: The number of output classes (including background).
-        channel_list: A list representing the intermediate channels that we have. The bottleneck (bottom of the U) outputs 2 * the last channel.
-    """
-
+class UNetInception(nn.Module):
     def __init__(self, in_channels, out_channels, channel_list, means=None, stds=None):
         super().__init__()
         if means is None:
@@ -92,11 +68,6 @@ class UNetAttn(nn.Module):
         for intermediate_channel in channel_list:
             self.downs.append(DoubleConv(curr_channel, intermediate_channel, intermediate_channel))
             curr_channel = intermediate_channel
-            
-        self.attention_gates = nn.ModuleList()
-        for i in range(len(channel_list)-1):
-            # self.attention_gates.append(AttentionGate(channel_list[i], channel_list[i+1], channel_list[i+1] // 2)) # For concatenation
-            self.attention_gates.append(AttentionGate(channel_list[i], channel_list[i+1], channel_list[i])) # For adding
 
         self.bottleneck = DoubleConv(curr_channel, curr_channel * 2, curr_channel)
 
@@ -122,8 +93,7 @@ class UNetAttn(nn.Module):
 
         x = self.bottleneck(x)
         for index, up in enumerate(self.ups):
-            attn = self.attention_gates[-index - 1](x, down_activations[-index - 1])
             x = self.unpool.forward(x, pool_outs[-index - 1])
-            temp = x + attn
+            temp = x + down_activations[-index - 1]
             x = up(temp)
         return x
