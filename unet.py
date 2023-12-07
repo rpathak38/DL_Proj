@@ -2,15 +2,15 @@ import torch
 from torch import nn
 
 
-class Normalize(nn.Module):
-    def __init__(self, mean, std):
-        super().__init__()
-        # Register mean and std as buffers
-        self.register_buffer('mean', mean.reshape(1, -1, 1, 1))
-        self.register_buffer('std', std.reshape(1, -1, 1, 1))
-
-    def forward(self, x):
-        return (x - self.mean) / self.std
+# class Normalize(nn.Module):
+#     def __init__(self, mean, std):
+#         super().__init__()
+#         # Register mean and std as buffers
+#         self.register_buffer('mean', mean.reshape(1, -1, 1, 1))
+#         self.register_buffer('std', std.reshape(1, -1, 1, 1))
+#
+#     def forward(self, x):
+#         return (x - self.mean) / self.std
 
 
 class DoubleConv(nn.Module):
@@ -51,13 +51,13 @@ class UNet(nn.Module):
         channel_list: A list representing the intermediate channels that we have. The bottleneck (bottom of the U) outputs 2 * the last channel.
     """
 
-    def __init__(self, in_channels, out_channels, channel_list, means=None, stds=None):
+    def __init__(self, in_channels, out_channels, channel_list, means = None, stds = None):
         super().__init__()
-        if means is None:
-            means = torch.tensor([0.0 for _ in range(in_channels)])
-        if stds is None:
-            stds = torch.tensor([1.0 for _ in range(in_channels)])
-        self.normalize = Normalize(mean=means, std=stds)
+        # if means is None:
+        #     means = torch.tensor([0.0 for _ in range(in_channels)])
+        # if stds is None:
+        #     stds = torch.tensor([1.0 for _ in range(in_channels)])
+        # self.normalize = Normalize(mean=means, std=stds)
         self.downs = nn.ModuleList()
         curr_channel = in_channels
         for intermediate_channel in channel_list:
@@ -74,9 +74,10 @@ class UNet(nn.Module):
                 self.ups.append(DoubleConv(channel_list[i], channel_list[i], channel_list[i - 1]))
         self.pool = nn.MaxPool2d(2, 2, return_indices=True)
         self.unpool = nn.MaxUnpool2d(2, 2)
+        self.softmax = nn.Softmax(dim=1)
 
     def forward(self, x):
-        x = self.normalize(x)
+        # x = self.normalize(x)
         pool_outs = []
         down_activations = []
         for down in self.downs:
@@ -91,4 +92,5 @@ class UNet(nn.Module):
             x = self.unpool.forward(x, pool_outs[-index - 1])
             temp = x + down_activations[-index - 1]
             x = up(temp)
+        # x = self.softmax(x)
         return x
