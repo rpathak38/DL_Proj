@@ -30,9 +30,7 @@ class DoubleConv(nn.Module):
                 nn.Conv2d(in_channels, mid_channels, (3, 3), (1, 1), 1, bias=False),
                 nn.BatchNorm2d(mid_channels),
                 nn.ReLU(inplace=True),
-                nn.Conv2d(mid_channels, out_channels, (3, 3), (1, 1), 1, bias=False),
-                nn.BatchNorm2d(out_channels),
-                nn.Sigmoid()
+                nn.Conv2d(mid_channels, out_channels, (3, 3), (1, 1), 1, bias=True),
             )
 
     def forward(self, x):
