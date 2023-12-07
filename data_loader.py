@@ -111,8 +111,8 @@ class pascalVOCLoader(data.Dataset):
         if self.img_size == ("same", "same"):
             pass
         else:
-            img = img.resize((self.img_size[0], self.img_size[1]))  # uint8 with RGB mode
-            lbl = lbl.resize((self.img_size[0], self.img_size[1]))
+            img = img.resize((self.img_size[0], self.img_size[1]), Image.LANCZOS)  # uint8 with RGB mode
+            lbl = lbl.resize((self.img_size[0], self.img_size[1]), Image.NEAREST)
         img = self.tf(img)
         lbl = torch.from_numpy(np.array(lbl)).long()
         lbl[lbl == 255] = 0
