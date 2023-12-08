@@ -122,6 +122,9 @@ class UNetAttn(nn.Module):
 
         x = self.bottleneck(x)
         for index, up in enumerate(self.ups):
+            print(up)
+            print(x)
+            print(self.attention_gates[-index - 1])
             attn = self.attention_gates[-index - 1](x, down_activations[-index - 1])
             x = self.unpool.forward(x, pool_outs[-index - 1])
             temp = x + attn
