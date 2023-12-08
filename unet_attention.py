@@ -122,6 +122,7 @@ class UNetAttn(nn.Module):
 
         x = self.bottleneck(x)
         for index, up in enumerate(self.ups):
+            print(index)
             print(x.shape)
             print(down_activations[-index - 1].shape)
             print(self.attention_gates[-index - 1])
