@@ -126,7 +126,10 @@ class UNetAttn(nn.Module):
             print(down_activations[-index - 1].shape)
             print(self.attention_gates[-index - 1])
             x = self.unpool.forward(x, pool_outs[-index - 1])
-            attn = self.attention_gates[-index - 1](down_activations[-index - 1], x)
-            temp = x + attn
+            if index < len(self.ups) - 1:
+                attn = self.attention_gates[-index - 1](down_activations[-index - 1], x)
+                temp = x + attn
+            else:
+                temp = x
             x = up(temp)
         return x
