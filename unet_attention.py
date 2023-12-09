@@ -95,8 +95,7 @@ class UNetAttn(nn.Module):
             
         self.attention_gates = nn.ModuleList()
         for i in range(len(channel_list)-1):
-            # self.attention_gates.append(AttentionGate(channel_list[i], channel_list[i+1], channel_list[i+1] // 2)) # For concatenation
-            self.attention_gates.append(AttentionGate(channel_list[i], channel_list[i+1], channel_list[i])) # For adding
+            self.attention_gates.append(AttentionGate(channel_list[i], channel_list[i], channel_list[i]//2))
 
         self.bottleneck = DoubleConv(curr_channel, curr_channel * 2, curr_channel)
 
@@ -126,8 +125,8 @@ class UNetAttn(nn.Module):
             print(x.shape)
             print(down_activations[-index - 1].shape)
             print(self.attention_gates[-index - 1])
-            attn = self.attention_gates[-index - 1](x, down_activations[-index - 1])
             x = self.unpool.forward(x, pool_outs[-index - 1])
+            attn = self.attention_gates[-index - 1](down_activations[-index - 1], x)
             temp = x + attn
             x = up(temp)
         return x
