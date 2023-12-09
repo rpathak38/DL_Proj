@@ -278,18 +278,18 @@ class pascalVOCLoader(data.Dataset):
             _, lbl = self.__getitem__(idx)  # Get image and label
             lbl_np = np.array(lbl)  # Convert label to numpy array
             #print all unique values in label
-            print(np.unique(lbl_np))
-            
-            # Check if any pixel in label_np (which has 3 channels - rgb) has any of the specified classes rgb values
-            if np.any(np.all(np.isin(lbl_np, class_rgb), axis=2)):
-                with_classes_idx.append(idx)
-            else:
-                without_classes_idx.append(idx)
+            # print(np.unique(lbl_np))
 
-            # if any(np.isin(lbl_np, class_rgb)):
+            # Check if any pixel in label_np (which has 3 channels - rgb) has any of the specified classes rgb values
+            # if np.any(np.all(np.isin(lbl_np, class_rgb), axis=2)):
             #     with_classes_idx.append(idx)
             # else:
             #     without_classes_idx.append(idx)
+
+            if any(np.isin(lbl_np, class_rgb)):
+                with_classes_idx.append(idx)
+            else:
+                without_classes_idx.append(idx)
 
         # Create two subsets
         dataset_with_classes = data.Subset(self, with_classes_idx)
