@@ -270,8 +270,8 @@ class pascalVOCLoader(data.Dataset):
         without_classes_idx = []
 
         # Mapping of classes to RGB values
-        pascal_labels = self.get_pascal_labels()
-        class_rgb = [pascal_labels[idx] for idx in class_list]
+        # pascal_labels = self.get_pascal_labels()
+        # class_rgb = [pascal_labels[idx] for idx in class_list]
 
 
         for idx in range(len(self)):
@@ -286,7 +286,7 @@ class pascalVOCLoader(data.Dataset):
             # else:
             #     without_classes_idx.append(idx)
 
-            if (np.isin(lbl_np, class_rgb)).any():
+            if (np.isin(lbl_np, class_list)).any():
                 with_classes_idx.append(idx)
             else:
                 without_classes_idx.append(idx)
