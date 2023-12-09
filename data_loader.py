@@ -277,7 +277,8 @@ class pascalVOCLoader(data.Dataset):
         for idx in range(len(self)):
             _, lbl = self.__getitem__(idx)  # Get image and label
             lbl_np = np.array(lbl)  # Convert label to numpy array
-
+            print(lbl_np.shape)
+            print(lbl_np)
             # Check if any pixel in label_np (which has 3 channels - rgb) has any of the specified classes rgb values
             if np.any(np.all(np.isin(lbl_np, class_rgb), axis=2)):
                 with_classes_idx.append(idx)
