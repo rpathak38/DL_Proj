@@ -286,7 +286,7 @@ class pascalVOCLoader(data.Dataset):
             # else:
             #     without_classes_idx.append(idx)
 
-            if any(np.isin(lbl_np, class_rgb)):
+            if (np.isin(lbl_np, class_rgb)).any():
                 with_classes_idx.append(idx)
             else:
                 without_classes_idx.append(idx)
