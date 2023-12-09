@@ -11,7 +11,7 @@ import glob
 
 from PIL import Image
 from tqdm import tqdm
-from torch.utils import data
+from torch.utils import data, Subset
 from torchvision import transforms
 
 
@@ -254,3 +254,43 @@ class pascalVOCLoader(data.Dataset):
                 m.imsave(pjoin(target_path, fname), lbl)
 
         assert expected == 9733, "unexpected dataset sizes"
+
+    def split_on_classes(self, class_list):
+        """
+        Splits the dataset into two based on the specified classes.
+
+        Args:
+            class_list (list): List of class indices to split on.
+
+        Returns:
+            A tuple of two datasets: (dataset_with_classes, dataset_without_classes)
+        """
+        # Indices for datasets
+        with_classes_idx = []
+        without_classes_idx = []
+
+        # Mapping of classes to RGB values
+        pascal_labels = self.get_pascal_labels()
+        class_rgb = [pascal_labels[idx] for idx in class_list]
+
+
+        for idx in range(len(self)):
+            _, lbl = self.__getitem__(idx)  # Get image and label
+            lbl_np = np.array(lbl)  # Convert label to numpy array
+
+            # Check if any pixel in label_np (which has 3 channels - rgb) has any of the specified classes rgb values
+            if np.any(np.all(np.isin(lbl_np, class_rgb), axis=2)):
+                with_classes_idx.append(idx)
+            else:
+                without_classes_idx.append(idx)
+
+            # if any(np.isin(lbl_np, class_rgb)):
+            #     with_classes_idx.append(idx)
+            # else:
+            #     without_classes_idx.append(idx)
+
+        # Create two subsets
+        dataset_with_classes = Subset(self, with_classes_idx)
+        dataset_without_classes = Subset(self, without_classes_idx)
+
+        return dataset_with_classes, dataset_without_classes
