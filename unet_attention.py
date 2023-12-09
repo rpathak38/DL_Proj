@@ -109,7 +109,7 @@ class UNetAttn(nn.Module):
         self.unpool = nn.MaxUnpool2d(2, 2)
 
     def forward(self, x):
-        x = self.normalize(x)
+        # x = self.normalize(x)
         pool_outs = []
         down_activations = []
         for down in self.downs:
