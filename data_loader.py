@@ -290,7 +290,7 @@ class pascalVOCLoader(data.Dataset):
             #     without_classes_idx.append(idx)
 
         # Create two subsets
-        dataset_with_classes = Subset(self, with_classes_idx)
-        dataset_without_classes = Subset(self, without_classes_idx)
+        dataset_with_classes = data.Subset(self, with_classes_idx)
+        dataset_without_classes = data.Subset(self, without_classes_idx)
 
         return dataset_with_classes, dataset_without_classes
