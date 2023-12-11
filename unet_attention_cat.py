@@ -123,10 +123,7 @@ class UNetAttnCat(nn.Module):
         x = self.bottleneck(x)
         for index, up in enumerate(self.ups):
             x = self.unpool.forward(x, pool_outs[-index - 1])
-            if index < len(self.ups) - 1:
-                attn = self.attention_gates[-index - 1](down_activations[-index - 1], x)
-                temp = torch.cat((attn, x), dim=1)
-            else:
-                temp = x
+            attn = self.attention_gates[-index - 1](down_activations[-index - 1], x)
+            temp = torch.cat((attn, x), dim=1)
             x = up(temp)
         return x
