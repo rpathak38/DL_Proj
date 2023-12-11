@@ -125,7 +125,7 @@ class UNetAttnCat(nn.Module):
             x = self.unpool.forward(x, pool_outs[-index - 1])
             if index < len(self.ups) - 1:
                 attn = self.attention_gates[-index - 1](down_activations[-index - 1], x)
-                temp = x.cat(attn)
+                temp = torch.cat((attn, x), dim=1)
             else:
                 temp = x
             x = up(temp)
