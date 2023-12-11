@@ -103,9 +103,9 @@ class UNetAttn(nn.Module):
         self.ups = nn.ModuleList()
         for i in reversed(range(len(channel_list))):
             if i - 1 < 0:
-                self.ups.append(DoubleConv(channel_list[i], channel_list[i], out_channels, last=True))
+                self.ups.append(DoubleConv(channel_list[i]*2, channel_list[i]*2, out_channels, last=True))
             else:
-                self.ups.append(DoubleConv(channel_list[i], channel_list[i], channel_list[i - 1]))
+                self.ups.append(DoubleConv(channel_list[i]*2, channel_list[i]*2, channel_list[i - 1]))
         self.pool = nn.MaxPool2d(2, 2, return_indices=True)
         self.unpool = nn.MaxUnpool2d(2, 2)
 
