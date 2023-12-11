@@ -69,7 +69,7 @@ class AttentionGate(nn.Module):
         return x * psi
 
 
-class UNetAttn(nn.Module):
+class UNetAttnCat(nn.Module):
     """Unet inspired architecture.
     Using same convolutions, with output channels being equal to the number of classes. Adding instead of
     appending. Upsampling with MaxUnpooling instead of transpose convolutions.
