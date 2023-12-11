@@ -20,21 +20,32 @@ class InceptionBlock(nn.Module):
         self.conv3 = nn.Conv2d(in_channels, mid_channels, kernel_size=3, stride=1, padding=1)
         self.conv5 = nn.Conv2d(in_channels, out_channels - 2 * mid_channels, kernel_size=5, stride=1, padding=2)
 
+        # Initialize the convolutional layers with default initialization
+        self.conv1.apply(self._init_weights)
+        self.conv3.apply(self._init_weights)
+        self.conv5.apply(self._init_weights)
+
+    def _init_weights(self, m):
+        if isinstance(m, nn.Conv2d):
+            nn.init.kaiming_normal_(m.weight)
+
     def forward(self, x):
         conv1_out = self.conv1(x)
         conv3_out = self.conv3(x)
         conv5_out = self.conv5(x)
         return torch.cat([conv1_out, conv3_out, conv5_out], dim=1)
 
+
+
 class DoubleConv(nn.Module):
     def __init__(self, in_channels, mid_channels, out_channels, last=False):
         super().__init__()
         if last is False:
             self.double_conv = nn.Sequential(
-                InceptionBlock(in_channels, out_channels),
-                nn.BatchNorm2d(out_channels),
+                InceptionBlock(in_channels, mid_channels),
+                nn.BatchNorm2d(mid_channels),
                 nn.ReLU(inplace=True),
-                InceptionBlock(out_channels, out_channels),
+                InceptionBlock(mid_channels, out_channels),
                 nn.BatchNorm2d(out_channels),
                 nn.ReLU(inplace=True)
             )
@@ -47,7 +58,7 @@ class DoubleConv(nn.Module):
                 nn.BatchNorm2d(out_channels),
                 nn.Sigmoid()
             )
-        
+
         print(f"Expected: {in_channels} -> {out_channels}")
 
     def forward(self, x):
